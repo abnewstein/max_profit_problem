@@ -8,35 +8,43 @@ const buildings = [
 
 function maxProfit(timeUnits) {
   const dp = Array(timeUnits + 1).fill(0);
-  const choice = Array(timeUnits + 1).fill("");
+  const choices = Array(timeUnits + 1)
+    .fill(null)
+    .map(() => []);
 
   for (let time = 1; time <= timeUnits; time++) {
     for (const building of buildings) {
       if (time >= building.buildTime) {
+        const remainingTime = time - building.buildTime;
         const profit =
-          dp[time - building.buildTime] +
-          building.earning * (time - building.buildTime + 1);
+          dp[remainingTime] + building.earning * (time - building.buildTime);
+
         if (profit > dp[time]) {
           dp[time] = profit;
-          choice[time] = building.name;
+          choices[time] = choices[remainingTime].map((seq) => [
+            ...seq,
+            building.name,
+          ]);
+          if (choices[time].length === 0) choices[time].push([building.name]);
+        } else if (profit === dp[time]) {
+          const newSequences = choices[remainingTime].map((seq) => [
+            ...seq,
+            building.name,
+          ]);
+          if (newSequences.length === 0) newSequences.push([building.name]);
+          choices[time].push(...newSequences);
         }
       }
     }
   }
 
-  let T = 0,
-    P = 0,
-    C = 0;
-  let t = timeUnits;
-  while (t > 0 && choice[t]) {
-    const building = choice[t];
-    if (building === "T") T++;
-    else if (building === "P") P++;
-    else if (building === "C") C++;
-    t -= buildings.find((b) => b.name === building).buildTime;
-  }
+  const results = choices[timeUnits].map((sequence) => {
+    const counts = { T: 0, P: 0, C: 0 };
+    sequence.forEach((building) => counts[building]++);
+    return counts;
+  });
 
-  return { T, P, C, earnings: dp[timeUnits] };
+  return { maxEarnings: dp[timeUnits], possibilities: results };
 }
 
 const rl = readline.createInterface({
@@ -46,14 +54,17 @@ const rl = readline.createInterface({
 
 rl.question("Enter the number of time units: ", (answer) => {
   const timeUnits = parseInt(answer);
-  if (isNaN(timeUnits) || timeUnits <= 0) {
-    console.log("Please enter a valid positive integer for time units.");
+  if (isNaN(timeUnits) || timeUnits <= 0 || timeUnits > 200) {
+    console.log(
+      "Please enter a valid positive integer for time units between 1 and 200."
+    );
   } else {
     const result = maxProfit(timeUnits);
-    console.log(`Optimal Plan for ${timeUnits} time units:`);
-    console.log(
-      `Theatres: ${result.T}, Pubs: ${result.P}, Commercial Parks: ${result.C}, Earnings: $${result.earnings}`
-    );
+    console.log(`Max Earnings: $${result.maxEarnings}`);
+    console.log("Possible Optimal Solutions:");
+    result.possibilities.forEach((combo, index) => {
+      console.log(`${index + 1}: T: ${combo.T}, P: ${combo.P}, C: ${combo.C}`);
+    });
   }
   rl.close();
 });
