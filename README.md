@@ -18,5 +18,3 @@ node ./maxProfit.js
 # or
 bun ./maxProfit.js
 ```
-## Screenshot
-![maxProfit](https://github.com/user-attachments/assets/16ca8f39-175e-4688-b1f8-683e20ef4bf1)
